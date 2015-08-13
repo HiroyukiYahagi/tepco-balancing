@@ -13,6 +13,10 @@
 			<cache-name>demand-cache</cache-name>
 			<scheme-name>dist-scheme</scheme-name>
 		</cache-mapping>
+		<cache-mapping>
+			<cache-name>generated-cache</cache-name>
+			<scheme-name>dist-scheme</scheme-name>
+		</cache-mapping>
 	</caching-scheme-mapping>
 	
 	<caching-schemes>

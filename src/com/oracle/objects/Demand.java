@@ -21,7 +21,7 @@ public class Demand implements PortableObject{
 		// TODO Auto-generated constructor stub
 		this.supplyerCode = 0;
 		this.customerCode = 0;
-		this.volume = new BigDecimal(0);
+		this.volume = BigDecimal.ZERO;
 		this.supplyDate = 19890819;
 		this.timeCode = 0;
 		this.deficit = 0;
