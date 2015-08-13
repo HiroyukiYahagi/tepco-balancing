@@ -124,5 +124,11 @@ public class Demand implements PortableObject{
 		arg0.writeInt(4, this.timeCode);
 		arg0.writeInt(5, this.deficit);
 	}
-
+	
+	@Override
+	public String toString() {
+		return "Demand [supplyerCode=" + supplyerCode + ", customerCode=" + customerCode + ", volume=" + volume
+				+ ", supplyDate=" + supplyDate + ", timeCode=" + timeCode + ", deficit=" + deficit + "]";
+	}
+	
 }

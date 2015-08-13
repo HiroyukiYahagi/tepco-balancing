@@ -3,7 +3,7 @@ package com.oracle.invocation;
 import com.tangosol.net.InvocationObserver;
 import com.tangosol.net.Member;
 
-public class InputDemandInvocationObserver implements InvocationObserver{
+public class InputPartialSupplysObserver implements InvocationObserver{
 
 	public static Integer endCount = 0;
 	
@@ -30,5 +30,5 @@ public class InputDemandInvocationObserver implements InvocationObserver{
 		// TODO Auto-generated method stub
 		
 	}
-
+	
 }

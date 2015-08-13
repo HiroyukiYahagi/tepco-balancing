@@ -2,10 +2,7 @@ package com.oracle.invocation;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.oracle.objects.Demand;
@@ -16,26 +13,28 @@ import com.tangosol.io.pof.PortableObject;
 import com.tangosol.net.AbstractInvocable;
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
-import com.tangosol.util.filter.AndFilter;
-import com.tangosol.util.filter.EqualsFilter;
 
 public class InputDemandInvocation extends AbstractInvocable implements PortableObject{
 
 	private static final long serialVersionUID = 1L;
-	private static final Integer damandNumberMax = 10000;
+	private static final Integer damandNumberMax = 100;
 	private ThreadLocalRandom rnd = ThreadLocalRandom.current();
-	private NamedCache demandCache = CacheFactory.getCache("demand-cache");
 	
 	private Integer invokedCode;	
 	private Integer timeCode;
 	private Integer supplyDate;
 	private String cacheName;
+	
+	public InputDemandInvocation() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
 
-	public InputDemandInvocation(Integer invokedCode, Integer timeCode, Integer supplyDate, String cacheName) {
+	public InputDemandInvocation(Integer invokedCode, Integer supplyDate, Integer timeCode, String cacheName) {
 		super();
 		this.invokedCode = invokedCode;
-		this.timeCode = timeCode;
 		this.supplyDate = supplyDate;
+		this.timeCode = timeCode;
 		this.cacheName = cacheName;
 	}
 
@@ -75,8 +74,11 @@ public class InputDemandInvocation extends AbstractInvocable implements Portable
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
+		System.out.println("start demand only");
+		NamedCache demandCache = CacheFactory.getCache("demand-cache");
 		
 		for(int i=0; i<damandNumberMax; i++){
+			System.out.println("start:" + i);
 			if(i%100 == 0)
 				System.out.println("count:"+i);
 			
@@ -95,19 +97,24 @@ public class InputDemandInvocation extends AbstractInvocable implements Portable
 					compSupplyDate = calendar.get(Calendar.YEAR)*10000 + calendar.get(Calendar.MONTH)*100 + calendar.get(Calendar.DAY_OF_MONTH);
 				}
 				
-				DemandKey key = new DemandKey(invokedCode, damandNumberMax, compSupplyDate, compTimeCode);
+				DemandKey key = new DemandKey(invokedCode, i, compSupplyDate, compTimeCode);
+				
 				Demand completionData = (Demand) demandCache.get(key);
 				if(completionData == null){
 					completionData = new Demand();
 				}
-
+				
 				Demand newDemand = new Demand(completionData);
 				newDemand.setDeficit(1);
+				newDemand.setTimeCode(timeCode);
+				newDemand.setSupplyDate(supplyDate);
+				System.out.println("data missing and completion: key:" + newDemand.getKey() + " data:" + newDemand + " from date:" + compSupplyDate + " time:" + compTimeCode);
 				demandCache.put(newDemand.getKey(), newDemand);
 				
 			}else{
 				//通常のput
-				Demand newDemand = new Demand(invokedCode, damandNumberMax, createVolume(), supplyDate, timeCode, 0);
+				Demand newDemand = new Demand(invokedCode, i, createVolume(), supplyDate, timeCode, 0);
+				System.out.println("data key:" + newDemand.getKey() + " data:"+newDemand);
 				demandCache.put(newDemand.getKey(), newDemand);
 			}
 		}
@@ -127,6 +134,7 @@ public class InputDemandInvocation extends AbstractInvocable implements Portable
 	@Override
 	public void readExternal(PofReader arg0) throws IOException {
 		// TODO Auto-generated method stub
+		
 		this.invokedCode = arg0.readInt(0);
 		this.supplyDate = arg0.readInt(1);
 		this.timeCode = arg0.readInt(2);

@@ -14,6 +14,12 @@ public class DemandKey implements PortableObject, KeyAssociation{
 	private Integer supplyDate;
 	private Integer timeCode;
 	
+	
+	public DemandKey() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
 	public DemandKey(Integer supplyerCode, Integer customerCode, Integer supplyDate, Integer timeCode) {
 		super();
 		this.supplyerCode = supplyerCode;
@@ -111,4 +117,12 @@ public class DemandKey implements PortableObject, KeyAssociation{
 		
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "DemandKey [supplyerCode=" + supplyerCode + ", customerCode=" + customerCode + ", supplyDate="
+				+ supplyDate + ", timeCode=" + timeCode + "]";
+	}
+	
+	
 }

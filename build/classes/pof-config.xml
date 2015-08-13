@@ -11,10 +11,6 @@
 			<class-name>com.oracle.objects.Demand</class-name>
 		</user-type>
 		<user-type>
-			<type-id>1002</type-id>
-			<class-name>com.oracle.objects.PartialSupply</class-name>
-		</user-type>
-		<user-type>
 			<type-id>2001</type-id>
 			<class-name>com.oracle.objects.DemandKey</class-name>
 		</user-type>
@@ -26,6 +22,13 @@
 			<type-id>3001</type-id>
 			<class-name>com.oracle.invocation.InputDemandInvocation</class-name>
 		</user-type>
-
+		<user-type>
+			<type-id>3002</type-id>
+			<class-name>com.oracle.invocation.InputPartialSupplyInvocation</class-name>
+		</user-type>
+		<user-type>
+			<type-id>9001</type-id>
+			<class-name>com.oracle.test.entryprocessor.ShowDataEntryProcessor</class-name>
+		</user-type>
 	</user-type-list>
 </pof-config>
