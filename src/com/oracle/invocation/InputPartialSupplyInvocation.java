@@ -1,10 +1,14 @@
 package com.oracle.invocation;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.oracle.objects.Demand;
-import com.oracle.objects.PartialSupply;
+import com.oracle.objects.DemandKey;
 import com.tangosol.io.pof.PofReader;
 import com.tangosol.io.pof.PofWriter;
 import com.tangosol.io.pof.PortableObject;
@@ -15,10 +19,8 @@ import com.tangosol.net.NamedCache;
 public class InputPartialSupplyInvocation extends AbstractInvocable implements PortableObject{
 
 	private static final long serialVersionUID = 1L;
-	private static final Integer partialSupplyNumberMax = 10;
-	private static final Integer subSupplyerCodeMax = 3;
-	private static final Integer customerCodeMax = 100;
 	private ThreadLocalRandom rnd = ThreadLocalRandom.current();
+	private NamedCache demandCache = CacheFactory.getCache("demand-cache");
 	
 	private Integer invokedCode;
 	private Integer timeCode;
@@ -74,24 +76,62 @@ public class InputPartialSupplyInvocation extends AbstractInvocable implements P
 	public void run() {
 		// TODO Auto-generated method stub
 		System.out.println("start partial");
-		NamedCache demandCache = CacheFactory.getCache("demand-cache");
 		
-		for(int i=0; i<partialSupplyNumberMax; i++){
+		try {
+			String filename = "files/partialsupply_" + supplyDate + "_" + timeCode + "_" + invokedCode + ".csv";
+			File file = new File(filename);
+			FileReader filereader = new FileReader(file);
+		
+			BufferedReader br = new BufferedReader(filereader);
 			
-			PartialSupply ps = new PartialSupply(invokedCode, subSupplyerCodeMax, customerCodeMax, supplyDate, timeCode);
-			System.out.println("try key:"+ps.getDemandKey());
-			Demand base = (Demand) demandCache.get(ps.getDemandKey());
-			Demand difference = ps.getDifferenceDemand(base);
-			Demand sameParameterData = (Demand) demandCache.get(difference.getKey());
-			if(sameParameterData != null){
-				difference.setVolume(difference.getVolume().add(sameParameterData.getVolume()));
+			String str;
+			while((str = br.readLine()) != null){
+				
+				String[] partialData = str.split(",");
+				if(partialData.length != 6){
+					System.out.println("ファイル形式エラー length:" + partialData.length);
+					continue;
+				}
+				
+				//部分供給仕分け処理
+				
+				DemandKey mainBaseKey = new DemandKey(Integer.parseInt(partialData[0]), Integer.parseInt(partialData[2]), Integer.parseInt(partialData[3]), Integer.parseInt(partialData[4]));
+				Demand mainDemand = (Demand) demandCache.get(mainBaseKey);
+				if(mainDemand == null){
+					System.out.println("元データがありません key:" + mainBaseKey);
+					continue;
+				}
+				
+				DemandKey subDemandKey = new DemandKey(Integer.parseInt(partialData[1]), Integer.parseInt(partialData[2]), Integer.parseInt(partialData[3]), Integer.parseInt(partialData[4]));
+				Demand subDemand = (Demand) demandCache.get(subDemandKey);
+				if(subDemand == null){
+					subDemand = new Demand(Integer.parseInt(partialData[1]), 
+							Integer.parseInt(partialData[2]), BigDecimal.ZERO, Integer.parseInt(partialData[3]), Integer.parseInt(partialData[4]), 0, mainDemand.getAreaCode());
+				}
+				
+				BigDecimal realMainVolume = new BigDecimal(partialData[5]);
+				
+				subDemand.setVolume(mainDemand.getVolume().subtract(realMainVolume));
+				mainDemand.setVolume(realMainVolume);
+				
+				System.out.println("main data key:" + mainDemand.getKey() + " data:"+mainDemand);
+				demandCache.put(mainDemand.getKey(), mainDemand);
+				System.out.println("sub data key:" + subDemand.getKey() + " data:"+subDemand);
+				demandCache.put(subDemand.getKey(), subDemand);
+				
 			}
-			System.out.println("dase key:" + (base == null ? "null" : base.getKey()) + " data:"+base);
-			System.out.println("differenced key:" + difference.getKey() + " data:"+difference);
-			demandCache.put(difference.getKey(), difference);
+			  
+			br.close();
+			filereader.close();
+	
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+	
 		System.out.println("end partial");
 	}
+	
 	
 	@Override
 	public void readExternal(PofReader arg0) throws IOException {

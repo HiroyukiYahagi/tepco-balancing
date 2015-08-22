@@ -7,6 +7,7 @@ import com.oracle.invocation.InputDemandInvocation;
 import com.oracle.invocation.InputDemandInvocationObserver;
 import com.oracle.invocation.InputPartialSupplyInvocation;
 import com.oracle.invocation.InputPartialSupplysObserver;
+import com.oracle.objects.DemandKey;
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.DistributedCacheService;
 import com.tangosol.net.InvocationService;
@@ -18,7 +19,7 @@ public class InputDemand {
 
 	public static void main(String[] args) {
 		
-		Integer supplyDate = 20150819;
+		Integer supplyDate = 20150815;
 		Integer timeCode = 0;
 		
 		System.out.println("start input demand");
@@ -40,31 +41,32 @@ public class InputDemand {
 	public static void inputDemandOnly(Integer supplyDate, Integer timeCode){
 
 		InvocationService invService = (InvocationService) CacheFactory.getService("invo-service");
-		Set<Member> memberSet = ((DistributedCacheService)(CacheFactory.getService("dist-service"))).getOwnershipEnabledMembers();
+		DistributedCacheService distService = (DistributedCacheService)CacheFactory.getService("dist-service");
+		Object lock = new Object();
+		InputDemandInvocationObserver idiObserver = new InputDemandInvocationObserver(lock);
 		
-		for (int threadNum = 0; threadNum < invocationServiceThreadCount; threadNum++) {
-			for (int memberNum = 0; memberNum < memberSet.size(); memberNum ++) {
+		String flag = System.getProperty("com.oracle.objects.demand.affinity");
+		if(flag != null && flag.equals("true")){
+			for(int supplyerCode=0; supplyerCode< 10; supplyerCode++){
+				DemandKey dummyKey = new DemandKey(supplyerCode, 0, 0, 0);
+				Member mem = distService.getKeyOwner(dummyKey);	
+				InputDemandInvocation idi = new InputDemandInvocation(supplyerCode, supplyDate, timeCode, "demand-cache-"+supplyDate);
+				invService.execute(idi, Collections.singleton(mem), idiObserver);
+			}	
+		}else{
+			Set memberSet = distService.getOwnershipEnabledMembers();
+			for (Member men : memberSet) {
 				
-				System.out.println("invoked member:" + memberNum + " thread:"+threadNum);
-				
-				InputDemandInvocation idi = new InputDemandInvocation(threadNum*memberSet.size() + memberNum, supplyDate, timeCode, "demand-cache-"+supplyDate);
-				InputDemandInvocationObserver idiObserver = new InputDemandInvocationObserver();
-				invService.execute(idi, Collections.singleton(memberSet.toArray()[memberNum]), idiObserver);
 			}
 		}
 		
-		while(true){
+		
+		synchronized (lock) {
 			try {
-				Thread.sleep(5000);
-				
+				lock.wait();
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-			if(InputDemandInvocationObserver.endCount >= invocationServiceThreadCount * memberSet.size()){
-				break;
-			}else{
-				System.out.println("waiting endcount:" + InputDemandInvocationObserver.endCount);
 			}
 		}
 		
@@ -73,33 +75,34 @@ public class InputDemand {
 	
 	public static void inpuPartialSupply(Integer supplyDate, Integer timeCode){
 		InvocationService invService = (InvocationService) CacheFactory.getService("invo-service");
-		Set<Member> memberSet = ((DistributedCacheService)(CacheFactory.getService("dist-service"))).getOwnershipEnabledMembers();
+		DistributedCacheService distService = (DistributedCacheService)CacheFactory.getService("dist-service");
+		Object lock = new Object();
+		InputPartialSupplysObserver ipiObserver = new InputPartialSupplysObserver(lock);
 		
-		for (int threadNum = 0; threadNum < invocationServiceThreadCount; threadNum++) {
-			for (int memberNum = 0; memberNum < memberSet.size(); memberNum ++) {
+		String flag = System.getProperty("com.oracle.objects.demand.affinity");
+		if(flag != null && flag.equals("true")){
+			for(int supplyerCode=0; supplyerCode< 10; supplyerCode++){
+				DemandKey dummyKey = new DemandKey(supplyerCode, 0, 0, 0);
+				Member mem = distService.getKeyOwner(dummyKey);			
+				InputPartialSupplyInvocation ipi = new InputPartialSupplyInvocation(supplyerCode, supplyDate, timeCode, "demand-cache-"+supplyDate);
+				invService.execute(ipi, Collections.singleton(mem), ipiObserver);
+			}
+		}else{
+			Set memberSet = distService.getOwnershipEnabledMembers();
+			for (Member men : memberSet) {
 				
-				System.out.println("invoked member:" + memberNum + " thread:"+threadNum);
-				
-				InputPartialSupplyInvocation ipi = new InputPartialSupplyInvocation(threadNum*memberSet.size() + memberNum, supplyDate, timeCode, "demand-cache-"+supplyDate);
-				InputPartialSupplysObserver ipiObserver = new InputPartialSupplysObserver();
-				invService.execute(ipi, Collections.singleton(memberSet.toArray()[memberNum]), ipiObserver);
 			}
 		}
 		
-		while(true){
+		synchronized (lock) {
 			try {
-				Thread.sleep(5000);
-				
+				lock.wait();
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-			if(InputPartialSupplysObserver.endCount >= invocationServiceThreadCount * memberSet.size()){
-				break;
-			}else{
-				System.out.println("waiting endcount:" + InputPartialSupplysObserver.endCount);
-			}
+			}			
 		}
+
 	}
 	
 }

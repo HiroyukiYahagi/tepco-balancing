@@ -71,7 +71,11 @@ public class DemandKey implements PortableObject, KeyAssociation{
 	@Override
 	public Object getAssociatedKey() {
 		// TODO Auto-generated method stub
-		return this.supplyerCode;
+		String flag = System.getProperty("com.oracle.objects.demand.affinity");
+		if(flag != null && flag.equals("true"))
+			return this.supplyerCode;
+		else
+			return null;
 	}
 
 	@Override

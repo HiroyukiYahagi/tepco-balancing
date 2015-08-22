@@ -15,6 +15,7 @@ public class Demand implements PortableObject{
 	private Integer supplyDate;
 	private Integer timeCode;
 	private Integer deficit;
+	private Integer areaCode;
 	
 	public Demand() {
 		super();
@@ -26,8 +27,9 @@ public class Demand implements PortableObject{
 		this.timeCode = 0;
 		this.deficit = 0;
 	}
-
-	public Demand(Integer supplyerCode, Integer customerCode, BigDecimal volume, Integer supplyDate, Integer timeCode, Integer deficit) {
+	
+	public Demand(Integer supplyerCode, Integer customerCode, BigDecimal volume, Integer supplyDate, Integer timeCode,
+			Integer deficit, Integer areaCode) {
 		super();
 		this.supplyerCode = supplyerCode;
 		this.customerCode = customerCode;
@@ -35,8 +37,9 @@ public class Demand implements PortableObject{
 		this.supplyDate = supplyDate;
 		this.timeCode = timeCode;
 		this.deficit = deficit;
+		this.areaCode = areaCode;
 	}
-	
+
 	public Demand(Demand dem) {
 		super();
 		this.supplyerCode = dem.getSupplyerCode();
@@ -45,6 +48,7 @@ public class Demand implements PortableObject{
 		this.supplyDate = dem.getSupplyDate();
 		this.timeCode = dem.getTimeCode();
 		this.deficit = dem.getDeficit();
+		this.areaCode = dem.getAreaCode();
 	}
 
 	public Integer getSupplyerCode() {
@@ -95,13 +99,19 @@ public class Demand implements PortableObject{
 		this.deficit = deficit;
 	}
 
-	public DemandKey getKey(){
-		return new DemandKey(this);
+	public Integer getAreaCode() {
+		return areaCode;
 	}
 
-	public NewestDemandKey getKeyForNewest(){
-		return new NewestDemandKey(this);
+	public void setAreaCode(Integer areaCode) {
+		this.areaCode = areaCode;
 	}
+
+	public Object getKey(){
+		return new DemandKey(this);
+	
+	}
+	
 	
 	@Override
 	public void readExternal(PofReader arg0) throws IOException {
@@ -112,6 +122,7 @@ public class Demand implements PortableObject{
 		this.supplyDate = arg0.readInt(3);
 		this.timeCode = arg0.readInt(4);
 		this.deficit = arg0.readInt(5);
+		this.areaCode = arg0.readInt(6);
 	}
 
 	@Override
@@ -123,12 +134,14 @@ public class Demand implements PortableObject{
 		arg0.writeInt(3, this.supplyDate);
 		arg0.writeInt(4, this.timeCode);
 		arg0.writeInt(5, this.deficit);
+		arg0.writeInt(6, this.areaCode);
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Demand [supplyerCode=" + supplyerCode + ", customerCode=" + customerCode + ", volume=" + volume
-				+ ", supplyDate=" + supplyDate + ", timeCode=" + timeCode + ", deficit=" + deficit + "]";
+				+ ", supplyDate=" + supplyDate + ", timeCode=" + timeCode + ", deficit=" + deficit + ", areaCode="
+				+ areaCode + "]";
 	}
 	
 }

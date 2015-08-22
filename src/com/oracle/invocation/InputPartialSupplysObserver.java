@@ -5,12 +5,25 @@ import com.tangosol.net.Member;
 
 public class InputPartialSupplysObserver implements InvocationObserver{
 
-	public static Integer endCount = 0;
+	public Integer endCount = 0;
+	private final int invokedCount = 10;
+	private Object lock;
 	
+	public InputPartialSupplysObserver(Object lock) {
+		super();
+		this.lock = lock;
+	}
+
 	@Override	
 	public void invocationCompleted() {
 		// TODO Auto-generated method stub
 		endCount ++;
+		
+		if(endCount == invokedCount){
+			synchronized (lock) {
+				lock.notify();
+			}
+		}
 	}
 
 	@Override
